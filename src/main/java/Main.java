@@ -1,4 +1,5 @@
 import Tunstall.Tunstall;
+import com.sun.javaws.exceptions.InvalidArgumentException;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
@@ -6,22 +7,20 @@ import java.io.IOException;
 
 public class Main {
 
-    public static String path="test.jpg";
-    public static int k=3;
+    public static String path="test.txt";
+    public static int k=9;
 
     public static void main(String[] args) {
 
-        System.out.println("Opening the file");
         try {
-            byte[] byteArray = FileUtils.readFileToByteArray(new File(path));
-            System.out.println("Analysing the file");
-            double[] probability = Tunstall.getProbability(byteArray);
-            System.out.println("Building tree using k="+k);
-
+            Tunstall tunstall = new Tunstall(FileUtils.readFileToByteArray(new File(path)),k);
+            FileUtils.writeByteArrayToFile(new File(path+".tstl"), tunstall.generateCodedFile());
+        } catch (InvalidArgumentException e) {
+            System.out.println(e.getMessage());
         } catch (IOException e) {
-            System.out.println("Exception in opening the file");
+            System.out.println("Exception while reading/saving the file");
         }
-
 
     }
 }
+
