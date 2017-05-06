@@ -1,6 +1,7 @@
 package Tree;
 
 import Helpers.CodesGenerator;
+import com.sun.javaws.exceptions.InvalidArgumentException;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -30,6 +31,10 @@ public class TunstallTree {
 
     }
 
+    public BitSet getCode(List<Byte> temp) throws InvalidArgumentException {
+        return findSpecificNode(tree, temp, 0).getCode();
+    }
+
     private List<TreeNode> generateTunstallTree() {
         List<TreeNode> tree = new ArrayList<TreeNode>();
 
@@ -42,7 +47,7 @@ public class TunstallTree {
         //Main tree loop
         while(K-Q>N-1){
             TreeNode maxProbNode = getFirstLeaf(tree.get(0));
-            searchForBiggestProb(tree, maxProbNode);
+            maxProbNode = searchForBiggestProb(tree, maxProbNode);
             BitSet freeCode = maxProbNode.getCode();
             double maxProb = maxProbNode.getProbability();
             maxProbNode.setCode(null);
@@ -64,15 +69,27 @@ public class TunstallTree {
         return getFirstLeaf(treeNode.getSubTree().get(0));
     }
 
-    private void searchForBiggestProb(List<TreeNode> tree, TreeNode maxProbNode) {
+    private TreeNode searchForBiggestProb(List<TreeNode> tree, TreeNode maxProbNode) {
         for (TreeNode node:tree) {
             if (!node.isLeaf) {
-                searchForBiggestProb(node.getSubTree(), maxProbNode);
+                maxProbNode = searchForBiggestProb(node.getSubTree(), maxProbNode);
             }else {
                 if (node.getProbability() > maxProbNode.getProbability()) {
                     maxProbNode = node;
                 }
             }
         }
+        return maxProbNode;
     }
+
+    private TreeNode findSpecificNode(List<TreeNode> tree, List<Byte> temp, int index) throws InvalidArgumentException {
+        for(TreeNode node: tree){
+            if(node.getSymbol()==temp.get(index)){
+                if(index==temp.size()-1) return node;
+                return findSpecificNode(node.getSubTree(), temp, index+1);
+            }
+        }
+        throw new InvalidArgumentException(new String[]{"Such symbol doesn't exists in code tree"});
+    }
+
 }

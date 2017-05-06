@@ -7,8 +7,8 @@ import java.io.IOException;
 
 public class Main {
 
-    public static String path="test.txt";
-    public static int k=9;
+    public static String path="test/uniform.pgm";
+    public static int k=16;
 
     public static void main(String[] args) {
 
