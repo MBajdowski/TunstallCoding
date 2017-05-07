@@ -7,14 +7,15 @@ import java.io.IOException;
 
 public class Main {
 
-    public static String path="test/uniform.pgm";
-    public static int k=16;
+    public static String path = "test/chronometer.pgm";
+    public static int k = 18;
 
     public static void main(String[] args) {
 
         try {
-            Tunstall tunstall = new Tunstall(FileUtils.readFileToByteArray(new File(path)),k);
-            FileUtils.writeByteArrayToFile(new File(path+".tstl"), tunstall.generateCodedFile());
+            Tunstall tunstall = new Tunstall(FileUtils.readFileToByteArray(new File(path)), k);
+            FileUtils.writeByteArrayToFile(new File(path + ".tstl"), tunstall.generateCodedFile());
+
         } catch (InvalidArgumentException e) {
             System.out.println(e.getMessage());
         } catch (IOException e) {
@@ -22,5 +23,7 @@ public class Main {
         }
 
     }
+
+
 }
 
