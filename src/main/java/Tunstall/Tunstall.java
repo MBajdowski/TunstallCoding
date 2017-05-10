@@ -24,7 +24,7 @@ public class Tunstall {
     public Tunstall(byte[] byteArray, int k) throws InvalidArgumentException {
         this.byteArray = byteArray;
         this.nrOfBits = countBytes(byteArray);
-        this.probability = calculateProbability(nrOfBits);
+        this.probability = calculateProbability(nrOfBits, byteArray.length);
         this.k = k;
         this.K = (int) Math.pow(2, k);
         if (K <= N) {
@@ -45,7 +45,27 @@ public class Tunstall {
         return probability[ofByte & 0xFF];
     }
 
-    private int[] countBytes(byte[] byteArray) {
+    public Tunstall(byte[] byteArray) {
+        int[] header = getHeader(byteArray);
+        this.byteArray = Arrays.copyOfRange(byteArray, header.length*4, byteArray.length);
+        this.k = header[1];
+        this.K=(int)Math.pow(2,k);
+        this.nrOfBits = Arrays.copyOfRange(header,2,N+2);
+        this.probability = calculateProbability(this.nrOfBits, header[0]);
+        this.tunstallTree = new TunstallTree(N, K, k, probability);
+    }
+
+    private int[] getHeader(byte[] byteArray) {
+        byte[] byteHeader = Arrays.copyOfRange(byteArray,0,(N+2)*4);
+        ByteBuffer buffer = ByteBuffer.wrap(byteHeader);
+        int[] header = new int[byteHeader.length / 4];
+        for(int i=0;i<header.length;i++){
+            header[i] = buffer.getInt(4*i);
+        }
+        return header;
+    }
+
+    private int[] countBytes(byte[] byteArray){
         int[] nrOfBytes = new int[N];
         for (int i = 0; i < N; i++) {
             nrOfBytes[i] = 0;
@@ -56,17 +76,17 @@ public class Tunstall {
         return nrOfBytes;
     }
 
-    private double[] calculateProbability(int[] nrOfBytes) {
+    private double[] calculateProbability(int[] nrOfBytes, int size){
         double[] probability = new double[N];
-        for (int i = 0; i < N; i++) {
-            probability[i] = (double) nrOfBytes[i] / byteArray.length;
+        for(int i =0;i<N;i++) {
+            probability[i]=(double)nrOfBytes[i]/size;
         }
         return probability;
     }
 
     public byte[] generateCodedFile() throws InvalidArgumentException {
         BitSet bits = generateHeader();
-        int nrOfBitsInHeader = (N + 1) * 4 * 8;
+        int nrOfBitsInHeader = (N+2)*4*8;
         int nrOfWords = 0;
         List<Byte> temp = new ArrayList<Byte>();
         for (int i = 0; i < byteArray.length; i++) {
@@ -79,10 +99,10 @@ public class Tunstall {
                         bits.set(nrOfBitsInHeader + nrOfWords * k + j);
                     }
                     nrOfWords++;
-                    BitSet lastSymbols = BitSet.valueOf(ArrayUtils.toPrimitive((Byte[]) temp.toArray()));
-                    for (int j = 0; j < temp.size() * 8; j++) {
-                        if (lastSymbols.get(j)) {
-                            bits.set(nrOfBitsInHeader + nrOfWords * k + j);
+                    BitSet lastSymbols = BitSet.valueOf(ArrayUtils.toPrimitive(temp.toArray(new Byte[temp.size()])));
+                    for(int j=0;j<temp.size()*8;j++){
+                        if(lastSymbols.get(j)){
+                            bits.set(nrOfBitsInHeader+nrOfWords*k+j);
                         }
                     }
                 }
@@ -100,10 +120,11 @@ public class Tunstall {
     }
 
     private BitSet generateHeader() {
-        int[] intHeader = new int[nrOfBits.length + 1];
-        intHeader[0] = k;
-        for (int i = 0; i < nrOfBits.length; i++) {
-            intHeader[i + 1] = nrOfBits[i];
+        int[] intHeader = new int[N+2];
+        intHeader[0] = byteArray.length;
+        intHeader[1] = k;
+        for(int i=0;i<nrOfBits.length;i++){
+            intHeader[i+2] = nrOfBits[i];
         }
         ByteBuffer byteBuffer = ByteBuffer.allocate(intHeader.length * 4);
         IntBuffer intBuffer = byteBuffer.asIntBuffer();
@@ -111,5 +132,23 @@ public class Tunstall {
 
         byte[] byteArray = byteBuffer.array();
         return BitSet.valueOf(byteArray);
+    }
+
+    public byte[] decodeFile(){
+        List<Byte> bytesInList = new ArrayList<Byte>();
+
+        BitSet bitsInFile = BitSet.valueOf(this.byteArray);
+        int nrOfCycles = (int) Math.ceil((double)this.byteArray.length*8/this.k);
+        for(int i=0;i<nrOfCycles;i++){
+            List<Byte> temp = tunstallTree.getSymbolsFromCode(bitsInFile.get(i*k, (i+1)*k));
+            if(temp==null){
+                temp = Arrays.asList(ArrayUtils.toObject(bitsInFile.get(i*k, this.byteArray.length*8).toByteArray()));
+                bytesInList.addAll(temp);
+                break;
+            }
+            bytesInList.addAll(temp);
+        }
+
+        return ArrayUtils.toPrimitive(bytesInList.toArray(new Byte[bytesInList.size()]));
     }
 }

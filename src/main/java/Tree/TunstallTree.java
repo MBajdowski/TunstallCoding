@@ -6,9 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.List;
+import java.util.*;
 
 @Getter
 @Setter
@@ -32,7 +30,9 @@ public class TunstallTree {
     }
 
     public BitSet getCode(List<Byte> temp) throws InvalidArgumentException {
-        return findSpecificNode(tree, temp, 0).getCode();
+        TreeNode code = findSpecificNode(tree, temp, 0);
+
+        return code==null?null:code.getCode();
     }
 
     private List<TreeNode> generateTunstallTree() {
@@ -55,9 +55,9 @@ public class TunstallTree {
             maxProbNode.setSubTree(new ArrayList<TreeNode>());
 
             //Initialize subtree
-            maxProbNode.getSubTree().add(new TreeNode(maxProb*probability[0], (byte)0, freeCode, true, null, null));
+            maxProbNode.getSubTree().add(new TreeNode(maxProb*probability[0], (byte)0, freeCode, true, null, maxProbNode));
             for(int i=1;i<N;i++) {
-                maxProbNode.getSubTree().add(new TreeNode(maxProb * probability[i], (byte) i, codeBook.get(Q), true, null, null));
+                maxProbNode.getSubTree().add(new TreeNode(maxProb * probability[i], (byte) i, codeBook.get(Q), true, null, maxProbNode));
                 Q++;
             }
         }
@@ -91,5 +91,37 @@ public class TunstallTree {
         }
         throw new InvalidArgumentException(new String[]{"Such symbol doesn't exists in code tree"});
     }
+
+    public List<Byte> getSymbolsFromCode(BitSet bitSet) {
+        TreeNode node = findNodeWithCode(tree, bitSet);
+        if(node==null){
+            return null;
+        }
+        List<Byte> listOfSymbols = new ArrayList<Byte>();
+        do{
+            listOfSymbols.add(node.getSymbol());
+            node = node.getParent();
+        }while(node!=null);
+
+        Collections.reverse(listOfSymbols);
+        return listOfSymbols;
+    }
+
+    private TreeNode findNodeWithCode(List<TreeNode> tree, BitSet code) {
+        for (TreeNode node:tree) {
+            if (!node.isLeaf) {
+                TreeNode temp = findNodeWithCode(node.getSubTree(), code);
+                if(temp!=null){
+                    return temp;
+                }
+            }else {
+                if (node.getCode().equals(code)) {
+                    return node;
+                }
+            }
+        }
+        return null;
+    }
+
 
 }
