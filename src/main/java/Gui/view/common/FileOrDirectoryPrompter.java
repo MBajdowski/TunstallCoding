@@ -17,11 +17,11 @@ public class FileOrDirectoryPrompter {
         return chooser.showOpenDialog(stage);
     }
 
-    public static File askUserForDirectory(final Stage stage, final String title) {
+    public static File askUserForDirectory(final Stage stage, final String title, final String currentPath) {
         DirectoryChooser chooser = new DirectoryChooser();
         chooser.setTitle(title);
         chooser.setInitialDirectory(
-                new File(System.getProperty("user.home"))
+                new File(currentPath)
         );
         return chooser.showDialog(stage);
     }

@@ -1,8 +1,7 @@
 package Gui.presenter;
 
-import Gui.presenter.events.CodeFileEvent;
+import Gui.presenter.events.DecodeFileEvent;
 import Gui.presenter.events.EventTypes;
-import Gui.view.common.ComponentsUtil;
 import Gui.view.common.FileOrDirectoryPrompter;
 import javafx.application.Platform;
 import javafx.event.Event;
@@ -13,7 +12,7 @@ import javafx.stage.Stage;
 
 import java.io.File;
 
-public class CodePresenter implements Presenter {
+public class DecodePresenter implements Presenter {
 
     private static final int DEFAULT_SIZE_OF_CODE_WORD = 10;
 
@@ -21,36 +20,31 @@ public class CodePresenter implements Presenter {
     private AnchorPane container;
 
     @FXML
-    private TextField fileToCodePathField;
+    private TextField fileToDecodePathField;
 
     @FXML
     private TextField outputFileFolderPathField;
 
-    @FXML
-    private TextField sizeOfCodeWord;
-
     private Stage stage;
     private Stage primaryStage;
-    private File fileToCode;
+    private File fileToDecode;
 
     @FXML
     public void initialize() {
         container.setDisable(true);
-        ComponentsUtil.convertToGTZeroIntegerField(sizeOfCodeWord, DEFAULT_SIZE_OF_CODE_WORD);
-        fileToCode = FileOrDirectoryPrompter.askUserForFile(stage, "Wybierz plik do zakodowania");
-        if(fileToCode == null) {
+        fileToDecode = FileOrDirectoryPrompter.askUserForFile(stage, "Wybierz plik do zdekodowania");
+        if (fileToDecode == null) {
             return;
         }
-        fileToCodePathField.setText(fileToCode.getPath());
-        outputFileFolderPathField.setText(fileToCode.getParent());
+        fileToDecodePathField.setText(fileToDecode.getPath());
+        outputFileFolderPathField.setText(fileToDecode.getParent());
 
         container.setDisable(false);
     }
 
     @FXML
-    public void handleCodeButton() {
-        Integer codeWordLength = Integer.valueOf(sizeOfCodeWord.getText());
-        Event event = new CodeFileEvent(fileToCode, outputFileFolderPathField.getText(), codeWordLength, EventTypes.CODE);
+    public void handleDecodeButton() {
+        Event event = new DecodeFileEvent(fileToDecode, outputFileFolderPathField.getText(), EventTypes.DECODE);
         primaryStage.fireEvent(event);
         stage.close();
     }
@@ -65,7 +59,7 @@ public class CodePresenter implements Presenter {
     @Override
     public void setStage(Stage stage) {
         this.stage = stage;
-        if(fileToCode == null) {
+        if (fileToDecode == null) {
             Platform.runLater(stage::close);
         }
     }

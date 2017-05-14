@@ -3,6 +3,7 @@ package Gui.presenter;
 import FileAnalysis.FileAnalyzer;
 import FileAnalysis.HistogramData;
 import Gui.presenter.events.CodeFileEvent;
+import Gui.presenter.events.DecodeFileEvent;
 import Gui.presenter.events.EventTypes;
 import Gui.view.HistogramGraphBuilder;
 import Tunstall.Tunstall;
@@ -49,7 +50,13 @@ public class MainPresenter implements Presenter {
 
     @FXML
     public void handleDecodeButton() {
-
+        WindowLoader<DecodePresenter, AnchorPane> configLoader = new WindowLoader<DecodePresenter, AnchorPane>() {
+            @Override
+            public void setUpController(DecodePresenter controller) {
+                controller.setPrimaryStage(stage);
+            }
+        };
+        configLoader.load("/Gui/view/decode.fxml", stage);
     }
 
     @FXML
@@ -61,6 +68,7 @@ public class MainPresenter implements Presenter {
     public void setStage(Stage stage) {
         this.stage = stage;
         stage.addEventHandler(EventTypes.CODE, this::handleCodeEvent);
+        stage.addEventHandler(EventTypes.DECODE, this::handleDecodeEvent);
     }
 
     private void handleCodeEvent(CodeFileEvent event) {
@@ -75,6 +83,31 @@ public class MainPresenter implements Presenter {
         } catch (InvalidArgumentException | IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private void handleDecodeEvent(DecodeFileEvent event) {
+        try {
+            byte[] inputFileByteArray = FileUtils.readFileToByteArray(event.getFileToDecode());
+            Tunstall tunstall = new Tunstall(inputFileByteArray);
+
+            String outputFileFullName = event.getFileToDecodeFolder() + File.separator + event.getFileToDecode().getName().replace(".tstl", "");
+            FileUtils.writeByteArrayToFile(new File(outputFileFullName), tunstall.decodeFile());
+
+            writeSuccessInfo();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void writeSuccessInfo() {
+        entropyLabel.setVisible(false);
+        entropyValueLabel.setText("");
+
+        histogramGraphPane.getChildren().clear();
+        Label successLabel = new Label("Dekodowanie zakończone.");
+        successLabel.setLayoutX(200);
+        successLabel.setLayoutY(170);
+        histogramGraphPane.getChildren().add(successLabel);
     }
 
     private void writeFileStatistics(Tunstall tunstall) {
